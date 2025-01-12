@@ -4,14 +4,14 @@ const db = require('../models/userModel');
 
 // Register user
 const registerUser = (req, res) => {
-  const { username, password } = req.body;
+  const { username, email, password } = req.body;
 
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
       return res.status(500).json({ error: 'Error hashing password' });
     }
 
-    db.run('INSERT INTO users (username, email, password) VALUES (?, ?)', [username, hashedPassword], function (err) {
+    db.run('INSERT INTO users (username, email, password) VALUES (?, ?)', [username, email, hashedPassword], function (err) {
       if (err) {
         return res.status(500).json({ error: 'Error registering user' });
       }
