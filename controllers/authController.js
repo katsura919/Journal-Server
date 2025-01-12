@@ -11,7 +11,7 @@ const registerUser = (req, res) => {
       return res.status(500).json({ error: 'Error hashing password' });
     }
 
-    db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword], function (err) {
+    db.run('INSERT INTO users (username, email, password) VALUES (?, ?)', [username, hashedPassword], function (err) {
       if (err) {
         return res.status(500).json({ error: 'Error registering user' });
       }
