@@ -9,7 +9,7 @@ const bodyParser = require('body-parser');
 const db = require('./models/userModel');
 const authRoutes = require('./routes/authRoutes');
 const journalRoutes = require('./routes/journalRoutes');
-
+const chatRoutes = require('./routes/chatRoutes');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -19,6 +19,8 @@ app.use(bodyParser.json());
 
 app.use('/auth', authRoutes);
 app.use('/api/journals', journalRoutes);
+app.use("/api", chatRoutes);
+
 
 app.get('/syncToClient', (req, res) => {
   const { last_sync_timestamp } = req.query;
