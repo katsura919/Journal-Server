@@ -22,6 +22,7 @@ app.use('/api/journals', journalRoutes);
 app.use("/api", chatRoutes);
 
 
+// 1. API to sync from server to client
 app.get('/syncToClient', (req, res) => {
   const { last_sync_timestamp } = req.query;
 
@@ -51,14 +52,14 @@ app.post('/syncToServer', (req, res) => {
   }
 
   const insertOrUpdateQuery = `
-    INSERT INTO journal_entries (journal_id, user_id, title, content, created_at, updated_at, deleted_at, version)
+    INSERT INTO journal_entries (journal_id, user_id, title, content, created_at, updated_at, journal_status, version)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(journal_id)
     DO UPDATE SET 
       title = excluded.title,
       content = excluded.content,
       updated_at = excluded.updated_at,
-      deleted_at = excluded.deleted_at,
+      journal_status = excluded.journal_status,
       version = excluded.version;
   `;
 
@@ -69,14 +70,14 @@ app.post('/syncToServer', (req, res) => {
     // Insert or update each entry
     entries.forEach(entry => {
       stmt.run(
-        entry.journal_id,
+        entry.journal_id || null,  // Auto-increment for new entries
         entry.user_id,
         entry.title,
         entry.content,
-        entry.created_at,
-        entry.updated_at,
-        entry.deleted_at || null,
-        entry.version || 1
+        entry.created_at || new Date().toISOString(),
+        entry.updated_at || new Date().toISOString(),
+        entry.journal_status || 'active',  // Default to 'active' if missing
+        entry.version || 1  // Default version if missing
       );
     });
 
@@ -89,6 +90,7 @@ app.post('/syncToServer', (req, res) => {
     });
   });
 });
+
 
 
 app.listen(port, () => {

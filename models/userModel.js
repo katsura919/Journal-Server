@@ -21,10 +21,31 @@ db.serialize(() => {
       content TEXT,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
       updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-      deleted_at DATETIME,        
+      journal_status TEXT,     
       version INTEGER NOT NULL DEFAULT 1 
     );
   `);
+  
+  db.run(`
+    CREATE TABLE IF NOT EXISTS chat_sessions (
+      session_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+      session_start DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  
+  db.run(`
+    CREATE TABLE IF NOT EXISTS chat_history (
+      chat_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER REFERENCES chat_sessions(session_id) ON DELETE CASCADE,
+      role TEXT NOT NULL CHECK (role IN ('user', 'model')),
+      message TEXT NOT NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  
+
+
   
 });
 

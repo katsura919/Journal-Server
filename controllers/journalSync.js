@@ -12,17 +12,18 @@ const syncJournals = (req, res) => {
   }
 
   const insertOrUpdateQuery = `
-    INSERT INTO journal_entries (journal_id, user_id, title, content, created_at, updated_at, is_synced)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO journal_entries (journal_id, user_id, title, content, created_at, updated_at, journal_status, version)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(journal_id) DO UPDATE SET
       title = excluded.title,
       content = excluded.content,
       updated_at = excluded.updated_at,
-      is_synced = excluded.is_synced;
+      journal_status = excluded.journal_status,
+      version = excluded.version;
   `;
 
   const syncPromises = journals.map((journal) => {
-    const { journal_id, title, content, created_at, updated_at } = journal;
+    const { journal_id, title, content, created_at, updated_at, journal_status, version } = journal;
 
     return new Promise((resolve, reject) => {
       db.run(
@@ -34,7 +35,8 @@ const syncJournals = (req, res) => {
           content,
           created_at || new Date().toISOString(),
           updated_at || new Date().toISOString(),
-          true, // Mark as synced
+          journal_status || 'active', // Default journal_status if missing
+          version || 1, // Default version if missing
         ],
         (err) => {
           if (err) reject(err);
@@ -52,4 +54,4 @@ const syncJournals = (req, res) => {
     });
 };
 
-  module.exports = {syncJournals};
+module.exports = { syncJournals };
