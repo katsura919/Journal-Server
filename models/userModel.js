@@ -21,11 +21,10 @@ db.serialize(() => {
       content TEXT,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
       updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-      journal_status TEXT,     
-      version INTEGER NOT NULL DEFAULT 1 
+      journal_status TEXT     
     );
   `);
-  
+    
   db.run(`
     CREATE TABLE IF NOT EXISTS chat_sessions (
       session_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,6 +40,17 @@ db.serialize(() => {
       role TEXT NOT NULL CHECK (role IN ('user', 'model')),
       message TEXT NOT NULL,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  db.run(`
+   CREATE TABLE IF NOT EXISTS moods (
+      mood_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      mood TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      mood_status TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
   `);
   
