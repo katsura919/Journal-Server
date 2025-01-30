@@ -58,19 +58,22 @@ app.post('/syncToServer', (req, res) => {
   }
 
   const insertOrUpdateQuery = `
-    INSERT INTO journal_entries (journal_id, user_id, title, content, created_at, updated_at, journal_status, version)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO journal_entries (journal_id, user_id, title, content, created_at, updated_at, journal_status)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(journal_id)
     DO UPDATE SET 
       title = excluded.title,
       content = excluded.content,
       updated_at = excluded.updated_at,
-      journal_status = excluded.journal_status,
-      version = excluded.version;
+      journal_status = excluded.journal_status
   `;
 
-  // Using a transaction to ensure consistency
-  db.serialize(() => {
+  // Start a transaction
+  db.run("BEGIN TRANSACTION;", (err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error starting transaction.' });
+    }
+
     const stmt = db.prepare(insertOrUpdateQuery);
 
     // Insert or update each entry
@@ -82,21 +85,25 @@ app.post('/syncToServer', (req, res) => {
         entry.content,
         entry.created_at || new Date().toISOString(),
         entry.updated_at || new Date().toISOString(),
-        entry.journal_status || 'active',  // Default to 'active' if missing
-        entry.version || 1  // Default version if missing
+        entry.journal_status || 'active'
       );
     });
 
+    // Finalize the statement and commit the transaction
     stmt.finalize((err) => {
       if (err) {
-        console.error('Error syncing data to server:', err);
-        return res.status(500).json({ error: 'Error syncing data to server.' });
+        db.run("ROLLBACK;", () => {
+          console.error('Error syncing data to server:', err);
+          return res.status(500).json({ error: 'Error syncing data to server.' });
+        });
+      } else {
+        db.run("COMMIT;", () => {
+          res.json({ message: 'Data synced to server successfully.' });
+        });
       }
-      res.json({ message: 'Data synced to server successfully.' });
     });
   });
 });
-
 
 
 
